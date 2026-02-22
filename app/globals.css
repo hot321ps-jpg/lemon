@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --lemon: #D9E021;
+}
+
+body {
+  background: #0A0A0A;
+  color: white;
+}
+
+/* 中二科技感滾動條 */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--lemon);
+  border-radius: 10px;
+}
