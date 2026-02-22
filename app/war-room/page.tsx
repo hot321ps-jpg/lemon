@@ -43,6 +43,7 @@ const THEME = {
   lemon: "#D9E021",
   bg: "#0A0A0A",
   card: "#141414",
+  border: "rgba(217, 224, 33, 0.2)",
   danger: "#FF4D4D"
 };
 
@@ -78,7 +79,7 @@ const MOCK = {
     { name: "聯動直播", x: 70, y: 50, z: 15 },
   ],
   phases: [
-    { title: "Phase 1｜領域鞏固", goal: "強化儀式感", bullets: ["固定開台吟唱", "建立術語表", "真心話環節"] },
+    { title: "Phase 1｜領域鞏固", goal: "強化儀式感", bullets: ["固定開台吟唱規則", "建立術語表", "真心話環節"] },
     { title: "Phase 2｜概念擴散", goal: "製造爆點", bullets: ["賭注企劃", "領域碰撞連動"] },
     { title: "Phase 3｜神格化", goal: "IP 固化", bullets: ["中二週邊", "會員階級"] },
   ]
@@ -103,6 +104,7 @@ function CardHeader({ title, icon: Icon }: { title: string; icon: any }) {
 }
 
 // ---------- 面板組件 ----------
+
 function ChuniPanel() {
   return (
     <div className="space-y-6">
@@ -132,14 +134,14 @@ function ChuniPanel() {
       </div>
       <Card>
         <CardHeader title="中二企劃 KPI 追蹤" icon={ScrollText} />
-        <div className="overflow-x-auto p-4">
+        <div className="overflow-x-auto p-4 text-white">
           <table className="w-full text-left text-sm">
             <tbody className="divide-y divide-white/5">
               {MOCK.chuniKpis.map((kpi) => (
                 <tr key={kpi.id}>
                   <td className="py-4 font-black text-[#D9E021] italic">{kpi.category}</td>
                   <td className="py-4 text-neutral-300">{kpi.metric}</td>
-                  <td className="py-4 text-center font-mono font-bold text-white">{kpi.actual}</td>
+                  <td className="py-4 text-center font-mono font-bold">{kpi.actual}</td>
                   <td className="py-4 text-xs text-neutral-500 italic">{kpi.advice}</td>
                 </tr>
               ))}
@@ -195,10 +197,10 @@ function PlanPanel() {
         <Card key={i} className="p-6">
           <div className="text-[10px] font-black text-[#D9E021] uppercase mb-2">Phase 0{i+1}</div>
           <h4 className="text-xl font-black text-white italic mb-4">{p.title}</h4>
-          <ul className="space-y-3">
+          <ul className="space-y-3 text-neutral-400">
             {p.bullets.map((b, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-neutral-400 italic">
-                <div className="mt-1.5 w-1 h-1 rounded-full bg-[#D9E021]" /> {b}
+              <li key={idx} className="flex items-start gap-2 text-sm italic">
+                <div className="mt-1.5 w-1 h-1 rounded-full bg-[#D9E021] shrink-0" /> {b}
               </li>
             ))}
           </ul>
@@ -208,13 +210,15 @@ function PlanPanel() {
   );
 }
 
-// ---------- 主頁面 ----------
+// ---------- 主頁面組件 ----------
+
 export default function LemonyangWarRoom() {
   const [activeTab, setActiveTab] = useState("chuni");
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 selection:bg-[#D9E021] selection:text-black">
+    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 selection:bg-[#D9E021] selection:text-black font-sans">
       <div className="max-w-7xl mx-auto space-y-10">
+        
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-white/10 pb-10">
           <div className="space-y-4">
             <h1 className="text-5xl font-black tracking-tighter italic uppercase text-white">
@@ -222,6 +226,7 @@ export default function LemonyangWarRoom() {
             </h1>
             <p className="text-neutral-500 max-w-xl text-sm leading-relaxed">{MOCK.channel.oneLiner}</p>
           </div>
+
           <nav className="flex p-1.5 bg-neutral-900 border border-white/5 rounded-2xl">
             {[
               { id: "chuni", label: "中二企劃", icon: Sword },
@@ -232,7 +237,7 @@ export default function LemonyangWarRoom() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all uppercase ${
-                  activeTab === tab.id ? "bg-[#D9E021] text-black" : "text-neutral-500"
+                  activeTab === tab.id ? "bg-[#D9E021] text-black shadow-[0_0_20px_rgba(217,224,33,0.3)]" : "text-neutral-500 hover:text-white"
                 }`}
               >
                 <tab.icon size={14} /> {tab.label}
@@ -243,32 +248,4 @@ export default function LemonyangWarRoom() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(MOCK.kpis).map(([key, kpi]) => (
-            <div key={key} className="bg-[#141414] border border-white/5 p-5 rounded-2xl">
-              <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">{kpi.label}</span>
-              <div className="flex items-baseline gap-1 mt-2">
-                <span className="text-3xl font-black italic text-white">{kpi.value}</span>
-                <span className="text-[10px] text-neutral-600 font-bold uppercase">{kpi.unit}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <main className="min-h-[400px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-            >
-              {activeTab === "chuni" && <ChuniPanel />}
-              {activeTab === "analysis" && <AnalysisPanel />}
-              {activeTab === "plan" && <PlanPanel />}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
-    </div>
-  );
-}
+            <div key={key} className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all">
