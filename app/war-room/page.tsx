@@ -114,7 +114,7 @@ const ChuniPanel = () => {
             <MousePointer2 size={20} className="text-[#D9E021]" /> 指揮官指令
           </h3>
           <p className="text-sm text-neutral-400 leading-relaxed">
-            目前「羊群」對於設定驅動型內容反應極佳，但轉化為「新觀眾」的效率停滯。建議增加「今日領地規則」小浮窗。
+            目前「羊群」對於設定驅動型內容反應極佳。即刻行動：在畫面增加「今日領地規則」小浮窗。
           </p>
         </Card>
         <Card className="p-6">
@@ -139,14 +139,14 @@ const ChuniPanel = () => {
 
       <Card>
         <CardHeader title="中二企劃 KPI 追蹤" icon={ScrollText} />
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto text-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-white/5 text-neutral-500 font-bold uppercase text-[10px] tracking-widest">
               <tr>
                 <th className="p-4 border-b border-white/5">類別</th>
-                <th className="p-4 border-b border-white/5">關鍵指標</th>
+                <th className="p-4 border-b border-white/5">指標</th>
                 <th className="p-4 border-b border-white/5 text-center">實際 / 目標</th>
-                <th className="p-4 border-b border-white/5">作戰指令</th>
+                <th className="p-4 border-b border-white/5">策略建議</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -181,155 +181,4 @@ const AnalysisPanel = () => {
               <XAxis type="number" dataKey="x" name="擴散性" stroke="#444" fontSize={12} />
               <YAxis type="number" dataKey="y" name="穩定度" stroke="#444" fontSize={12} />
               <ZAxis type="number" dataKey="z" range={[100, 1000]} />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{backgroundColor:'#141414', border:'1px solid #333'}} />
-              {MOCK.contentMatrix.map((entry, index) => (
-                <Scatter key={index} name={entry.name} data={[entry]} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-              ))}
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <CardHeader title="流量信仰來源" icon={Users} />
-        <div className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={MOCK.traffic} innerRadius={70} outerRadius={100} dataKey="value" paddingAngle={5}>
-                {MOCK.traffic.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="space-y-2 mt-4 text-[10px]">
-            {MOCK.traffic.map((item, i) => (
-              <div key={i} className="flex justify-between">
-                <span className="text-neutral-500 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{backgroundColor: PIE_COLORS[i]}} /> {item.name}
-                </span>
-                <span className="text-white font-mono">{item.value}%</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-};
-
-const PlanPanel = () => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {MOCK.phases.map((p, i) => (
-        <Card key={i} className={`p-6 ${i === 0 ? 'border-[#D9E021]/40' : ''}`}>
-          <div className="text-[10px] font-black text-[#D9E021] uppercase tracking-widest mb-2">Phase 0{i+1}</div>
-          <h4 className="text-xl font-black text-white italic mb-4">{p.title}</h4>
-          <div className="bg-white/5 rounded-xl p-4 mb-4">
-            <p className="text-xs text-neutral-500 uppercase font-bold mb-1">主要目標</p>
-            <p className="text-sm text-white">{p.goal}</p>
-          </div>
-          <ul className="space-y-3">
-            {p.bullets.map((b, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-neutral-400">
-                <div className="mt-1.5 w-1 h-1 rounded-full bg-[#D9E021] shrink-0" /> {b}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      ))}
-    </div>
-  );
-};
-
-// ---------- 主頁面組件 ----------
-export default function LemonyangWarRoom() {
-  const [activeTab, setActiveTab] = useState("chuni");
-
-  return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 font-sans selection:bg-[#D9E021] selection:text-black">
-      <div className="max-w-7xl mx-auto space-y-10">
-        
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-white/10 pb-10">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="bg-[#D9E021] text-black px-2 py-0.5 text-[10px] font-black rounded uppercase italic tracking-tighter">Live Monitor</span>
-              <h1 className="text-5xl font-black tracking-tighter italic text-white uppercase">
-                Lemon<span className="text-[#D9E021]">yang</span> Command
-              </h1>
-            </div>
-            <p className="text-neutral-500 max-w-xl text-sm font-medium leading-relaxed">
-              {MOCK.channel.oneLiner}
-            </p>
-            <div className="flex gap-2 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-              <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full flex items-center gap-2">
-                <Crown size={12} className="text-[#D9E021]" /> {MOCK.channel.stage}
-              </span>
-              <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full">
-                定位：{MOCK.channel.core}
-              </span>
-            </div>
-          </div>
-
-          <nav className="flex p-1.5 bg-neutral-900 border border-white/5 rounded-2xl">
-            {[
-              { id: "chuni", label: "中二企劃", icon: Sword },
-              { id: "analysis", label: "矩陣分析", icon: BarChart3 },
-              { id: "plan", label: "作戰計畫", icon: Rocket },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-tighter ${
-                  activeTab === tab.id 
-                    ? "bg-[#D9E021] text-black shadow-[0_0_25px_rgba(217,224,33,0.4)]" 
-                    : "text-neutral-500 hover:text-white"
-                }`}
-              >
-                <tab.icon size={14} /> {tab.label}
-              </button>
-            ))}
-          </nav>
-        </header>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Object.entries(MOCK.kpis).map(([key, kpi]) => (
-            <div key={key} className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all">
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">{kpi.label}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${kpi.status === 'GREEN' ? 'bg-[#D9E021]' : kpi.status === 'AMBER' ? 'bg-amber-500' : 'bg-red-500'} shadow-[0_0_8px_currentColor]`} />
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-white italic tracking-tighter">{kpi.value}</span>
-                <span className="text-[10px] text-neutral-600 font-bold uppercase">{kpi.unit}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <main className="min-h-[500px]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {activeTab === "chuni" && <ChuniPanel />}
-              {activeTab === "analysis" && <AnalysisPanel />}
-              {activeTab === "plan" && <PlanPanel />}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-
-        <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-600 text-[10px] font-black tracking-widest uppercase">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#D9E021] animate-pulse" /> 
-            系統核心運作中
-          </div>
-          <div>VER: 2.5.0_LEMON_BURST</div>
-        </footer>
-      </div>
-    </div>
-  );
-}
+              <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{backgroundColor:'#141
