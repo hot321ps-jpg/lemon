@@ -1,45 +1,26 @@
-
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
-  Activity,
-  AlertTriangle,
   BarChart3,
-  CalendarDays,
-  ChevronDown,
   Crown,
-  Flame,
-  LayoutDashboard,
-  ShieldAlert,
-  Target,
-  TrendingUp,
-  Users,
-  Zap,
-  Sword,
-  ScrollText,
   MousePointer2,
-  Rocket
+  Rocket,
+  ScrollText,
+  Sword,
+  Target,
+  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  AreaChart,
-  Area,
   PieChart,
   Pie,
   Cell,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
   ScatterChart,
   Scatter,
   ZAxis,
@@ -53,7 +34,7 @@ const THEME = {
   border: "rgba(217, 224, 33, 0.2)",
   text: "#FFFFFF",
   muted: "#A3A3A3",
-  danger: "#FF4D4D"
+  danger: "#FF4D4D",
 };
 
 const PIE_COLORS = [THEME.lemon, "#BCC41E", "#9AA118", "#787D13"];
@@ -64,13 +45,13 @@ const MOCK = {
     name: "lemonyang",
     stage: "領域展開期",
     oneLiner: "核心粉絲（羊群）黏著度極高，需透過『中二企劃』打破流量同溫層。",
-    core: "中二魂實況 ｜ 陪伴型互動 ｜ 領域展開"
+    core: "中二魂實況 ｜ 陪伴型互動 ｜ 領域展開",
   },
   kpis: {
-    faithWavelength: { value: 420, label: "信仰波長", unit: "ACV", status: "GREEN" },
-    chatHeat: { value: 0.85, label: "聊天室熱度", unit: "CPM", status: "GREEN" },
-    retention: { value: 0.72, label: "羊群留存", unit: "Index", status: "AMBER" },
-    viral: { value: 0.45, label: "擴散力", unit: "Low", status: "RED" },
+    faithWavelength: { value: 420, label: "信仰波長", unit: "ACV", status: "GREEN" as const },
+    chatHeat: { value: 0.85, label: "聊天室熱度", unit: "CPM", status: "GREEN" as const },
+    retention: { value: 0.72, label: "羊群留存", unit: "Index", status: "AMBER" as const },
+    viral: { value: 0.45, label: "擴散力", unit: "Low", status: "RED" as const },
   },
   chuniKpis: [
     { id: 1, category: "設定沉浸度", metric: "內梗頻率", target: "50", actual: "62", status: "EXCEED", advice: "羊群對新設定接受度高。" },
@@ -92,17 +73,29 @@ const MOCK = {
     { title: "Phase 1｜領域鞏固", goal: "強化內梗與儀式感", bullets: ["固定開台吟唱規則", "建立羊群專屬術語表", "每週一次真心話環節"] },
     { title: "Phase 2｜概念擴散", goal: "製造可剪輯的爆點", bullets: ["高張力賭注企劃", "跨台連動『領域碰撞』", "短影音高頻投放"] },
     { title: "Phase 3｜品牌神格化", goal: "IP 商業化與社群固化", bullets: ["推出專屬中二週邊", "開啟會員專屬階級", "線下大型教眾聚會"] },
-  ]
+  ],
 };
 
-// ---------- UI 基礎組件 ----------
-const Card = ({ children, className = "" }) => (
+type KPIStatus = "GREEN" | "AMBER" | "RED";
+
+type CardProps = {
+  children: React.ReactNode;
+  className?: string;
+};
+
+const Card = ({ children, className = "" }: CardProps) => (
   <div className={`bg-[#141414] border border-white/10 rounded-3xl overflow-hidden shadow-2xl ${className}`}>
     {children}
   </div>
 );
 
-const CardHeader = ({ title, icon: Icon, color = THEME.lemon }) => (
+type CardHeaderProps = {
+  title: string;
+  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties; className?: string }>;
+  color?: string;
+};
+
+const CardHeader = ({ title, icon: Icon, color = THEME.lemon }: CardHeaderProps) => (
   <div className="flex items-center gap-3 p-6 border-b border-white/5">
     <Icon size={20} style={{ color }} />
     <h3 className="text-lg font-bold tracking-tight text-white">{title}</h3>
@@ -121,11 +114,13 @@ const ChuniPanel = () => (
         </h3>
         <p className="text-sm text-neutral-400 leading-relaxed">
           目前「羊群」對於設定驅動型內容反應極佳，但轉化為「新觀眾」的效率停滯。
-          <br /><br />
+          <br />
+          <br />
           <span className="text-[#D9E021] font-bold">● 即刻行動：</span>
           在直播畫面增加「今日領地規則」小浮窗，降低新教眾的認知難度。
         </p>
       </Card>
+
       <Card className="p-6">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
           <Target size={20} className="text-[#D9E021]" /> 術式穩定度 (Lore Sync)
@@ -138,7 +133,10 @@ const ChuniPanel = () => (
                 <span className="text-[#D9E021] font-mono">{85 - i * 5}%</span>
               </div>
               <div className="h-1.5 w-full bg-white/5 rounded-full">
-                <div className="h-full bg-[#D9E021] shadow-[0_0_10px_#D9E021] rounded-full" style={{ width: `${85 - i * 5}%` }} />
+                <div
+                  className="h-full bg-[#D9E021] shadow-[0_0_10px_#D9E021] rounded-full"
+                  style={{ width: `${85 - i * 5}%` }}
+                />
               </div>
             </div>
           ))}
@@ -164,7 +162,7 @@ const ChuniPanel = () => (
                 <td className="p-4 font-black text-[#D9E021] italic">{kpi.category}</td>
                 <td className="p-4 text-neutral-300">{kpi.metric}</td>
                 <td className="p-4 text-center font-mono font-bold">
-                  <span className={kpi.status === 'WARNING' ? 'text-red-500' : 'text-emerald-400'}>{kpi.actual}</span>
+                  <span className={kpi.status === "WARNING" ? "text-red-500" : "text-emerald-400"}>{kpi.actual}</span>
                   <span className="text-neutral-600 ml-1">/ {kpi.target}</span>
                 </td>
                 <td className="p-4 text-xs text-neutral-500 italic">{kpi.advice}</td>
@@ -189,7 +187,10 @@ const AnalysisPanel = () => (
             <XAxis type="number" dataKey="x" name="擴散性" stroke="#444" fontSize={12} />
             <YAxis type="number" dataKey="y" name="穩定度" stroke="#444" fontSize={12} />
             <ZAxis type="number" dataKey="z" range={[100, 1000]} />
-            <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{backgroundColor:'#141414', border:'1px solid #333'}} />
+            <Tooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              contentStyle={{ backgroundColor: "#141414", border: "1px solid #333" }}
+            />
             {MOCK.contentMatrix.map((entry, index) => (
               <Scatter key={index} name={entry.name} data={[entry]} fill={PIE_COLORS[index % PIE_COLORS.length]} />
             ))}
@@ -204,22 +205,25 @@ const AnalysisPanel = () => (
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={MOCK.traffic} innerRadius={70} outerRadius={100} dataKey="value" paddingAngle={5}>
-              {MOCK.traffic.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />)}
+              {MOCK.traffic.map((_, i) => (
+                <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />
+              ))}
             </Pie>
             <Tooltip />
           </PieChart>
         </ResponsiveContainer>
+
         <div className="space-y-2 mt-4">
           {MOCK.traffic.map((item, i) => (
             <div key={i} className="flex justify-between text-xs">
               <span className="text-neutral-500 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{backgroundColor: PIE_COLORS[i]}} /> {item.name}
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} /> {item.name}
               </span>
               <span className="text-white font-mono">{item.value}%</span>
             </div>
           ))}
         </div>
-      </Card>
+      </div>
     </Card>
   </div>
 );
@@ -228,17 +232,21 @@ const AnalysisPanel = () => (
 const PlanPanel = () => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
     {MOCK.phases.map((p, i) => (
-      <Card key={i} className={`p-6 ${i === 0 ? 'border-[#D9E021]/40' : ''}`}>
-        <div className="text-[10px] font-black text-[#D9E021] uppercase tracking-widest mb-2">Phase 0{i+1}</div>
+      <Card key={i} className={`p-6 ${i === 0 ? "border-[#D9E021]/40" : ""}`}>
+        <div className="text-[10px] font-black text-[#D9E021] uppercase tracking-widest mb-2">
+          Phase 0{i + 1}
+        </div>
         <h4 className="text-xl font-black text-white italic mb-4">{p.title}</h4>
+
         <div className="bg-white/5 rounded-xl p-4 mb-4">
           <p className="text-xs text-neutral-500 uppercase font-bold mb-1">主要目標</p>
           <p className="text-sm text-white">{p.goal}</p>
         </div>
+
         <ul className="space-y-3">
           {p.bullets.map((b, idx) => (
             <li key={idx} className="flex items-start gap-2 text-sm text-neutral-400">
-              <div className="mt-1.5 w-1 h-1 rounded-full bg-[#D9E021] shrink-0" /> {b}
+              <span className="mt-1.5 w-1 h-1 rounded-full bg-[#D9E021] shrink-0" /> {b}
             </li>
           ))}
         </ul>
@@ -249,24 +257,37 @@ const PlanPanel = () => (
 
 // ---------- 主頁面組件 ----------
 export default function LemonyangWarRoom() {
-  const [activeTab, setActiveTab] = useState("chuni");
+  const [activeTab, setActiveTab] = useState<"chuni" | "analysis" | "plan">("chuni");
+
+  const tabs = [
+    { id: "chuni" as const, label: "中二企劃", icon: Sword },
+    { id: "analysis" as const, label: "矩陣分析", icon: BarChart3 },
+    { id: "plan" as const, label: "作戰計畫", icon: Rocket },
+  ];
+
+  const statusDotClass = (status: KPIStatus) => {
+    if (status === "GREEN") return "bg-[#D9E021]";
+    if (status === "AMBER") return "bg-amber-500";
+    return "bg-red-500";
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 font-sans selection:bg-[#D9E021] selection:text-black">
       <div className="max-w-7xl mx-auto space-y-10">
-        
         {/* Header 戰情室抬頭 */}
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-white/10 pb-10">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="bg-[#D9E021] text-black px-2 py-0.5 text-[10px] font-black rounded uppercase italic tracking-tighter">Live Monitor</span>
+              <span className="bg-[#D9E021] text-black px-2 py-0.5 text-[10px] font-black rounded uppercase italic tracking-tighter">
+                Live Monitor
+              </span>
               <h1 className="text-5xl font-black tracking-tighter italic text-white uppercase">
                 Lemon<span className="text-[#D9E021]">yang</span> Command
               </h1>
             </div>
-            <p className="text-neutral-500 max-w-xl text-sm font-medium leading-relaxed">
-              {MOCK.channel.oneLiner}
-            </p>
+
+            <p className="text-neutral-500 max-w-xl text-sm font-medium leading-relaxed">{MOCK.channel.oneLiner}</p>
+
             <div className="flex gap-2">
               <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
                 <Crown size={12} className="text-[#D9E021]" /> {MOCK.channel.stage}
@@ -279,33 +300,37 @@ export default function LemonyangWarRoom() {
 
           {/* 導航切換 */}
           <nav className="flex p-1.5 bg-neutral-900 border border-white/5 rounded-2xl">
-            {[
-              { id: "chuni", label: "中二企劃", icon: Sword },
-              { id: "analysis", label: "矩陣分析", icon: BarChart3 },
-              { id: "plan", label: "作戰計畫", icon: Rocket },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-tighter ${
-                  activeTab === tab.id 
-                    ? "bg-[#D9E021] text-black shadow-[0_0_25px_rgba(217,224,33,0.4)]" 
-                    : "text-neutral-500 hover:text-white"
-                }`}
-              >
-                <tab.icon size={14} /> {tab.label}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const TabIcon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-tighter ${
+                    activeTab === tab.id
+                      ? "bg-[#D9E021] text-black shadow-[0_0_25px_rgba(217,224,33,0.4)]"
+                      : "text-neutral-500 hover:text-white"
+                  }`}
+                >
+                  <TabIcon size={14} /> {tab.label}
+                </button>
+              );
+            })}
           </nav>
         </header>
 
         {/* 核心 KPI 橫幅 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(MOCK.kpis).map(([key, kpi]) => (
-            <div key={key} className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all">
+            <div
+              key={key}
+              className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all"
+            >
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">{kpi.label}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${kpi.status === 'GREEN' ? 'bg-[#D9E021]' : kpi.status === 'AMBER' ? 'bg-amber-500' : 'bg-red-500'} shadow-[0_0_8px_currentColor]`} />
+                <div
+                  className={`w-1.5 h-1.5 rounded-full ${statusDotClass(kpi.status)} shadow-[0_0_8px_currentColor]`}
+                />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-black text-white italic tracking-tighter">{kpi.value}</span>
@@ -336,7 +361,7 @@ export default function LemonyangWarRoom() {
         <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-600">
           <div className="flex items-center gap-6 text-[10px] font-black tracking-widest uppercase">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#D9E021] animate-pulse" /> 
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D9E021] animate-pulse" />
               系統核心運作中
             </div>
             <div>VER: 2.5.0_LEMON_BURST</div>
