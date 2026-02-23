@@ -10,6 +10,7 @@ import {
   Sword,
   Target,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -91,7 +92,7 @@ const Card = ({ children, className = "" }: CardProps) => (
 
 type CardHeaderProps = {
   title: string;
-  icon: React.ComponentType<{ size?: number; style?: React.CSSProperties; className?: string }>;
+  icon: LucideIcon;
   color?: string;
 };
 
@@ -259,10 +260,10 @@ const PlanPanel = () => (
 export default function LemonyangWarRoom() {
   const [activeTab, setActiveTab] = useState<"chuni" | "analysis" | "plan">("chuni");
 
-  const tabs = [
-    { id: "chuni" as const, label: "中二企劃", icon: Sword },
-    { id: "analysis" as const, label: "矩陣分析", icon: BarChart3 },
-    { id: "plan" as const, label: "作戰計畫", icon: Rocket },
+  const tabs: Array<{ id: "chuni" | "analysis" | "plan"; label: string; icon: LucideIcon }> = [
+    { id: "chuni", label: "中二企劃", icon: Sword },
+    { id: "analysis", label: "矩陣分析", icon: BarChart3 },
+    { id: "plan", label: "作戰計畫", icon: Rocket },
   ];
 
   const statusDotClass = (status: KPIStatus) => {
@@ -274,7 +275,7 @@ export default function LemonyangWarRoom() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 font-sans selection:bg-[#D9E021] selection:text-black">
       <div className="max-w-7xl mx-auto space-y-10">
-        {/* Header 戰情室抬頭 */}
+        {/* Header */}
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-white/10 pb-10">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -298,7 +299,7 @@ export default function LemonyangWarRoom() {
             </div>
           </div>
 
-          {/* 導航切換 */}
+          {/* Tabs */}
           <nav className="flex p-1.5 bg-neutral-900 border border-white/5 rounded-2xl">
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
@@ -319,7 +320,7 @@ export default function LemonyangWarRoom() {
           </nav>
         </header>
 
-        {/* 核心 KPI 橫幅 */}
+        {/* KPI */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(MOCK.kpis).map(([key, kpi]) => (
             <div
@@ -328,9 +329,7 @@ export default function LemonyangWarRoom() {
             >
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">{kpi.label}</span>
-                <div
-                  className={`w-1.5 h-1.5 rounded-full ${statusDotClass(kpi.status)} shadow-[0_0_8px_currentColor]`}
-                />
+                <div className={`w-1.5 h-1.5 rounded-full ${statusDotClass(kpi.status)} shadow-[0_0_8px_currentColor]`} />
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-black text-white italic tracking-tighter">{kpi.value}</span>
@@ -340,7 +339,7 @@ export default function LemonyangWarRoom() {
           ))}
         </div>
 
-        {/* 動態內容區 */}
+        {/* Content */}
         <main className="min-h-[500px]">
           <AnimatePresence mode="wait">
             <motion.div
@@ -357,7 +356,7 @@ export default function LemonyangWarRoom() {
           </AnimatePresence>
         </main>
 
-        {/* Footer 狀態欄 */}
+        {/* Footer */}
         <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-600">
           <div className="flex items-center gap-6 text-[10px] font-black tracking-widest uppercase">
             <div className="flex items-center gap-2">
