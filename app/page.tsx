@@ -10,6 +10,9 @@ import {
   Sword,
   Target,
   Users,
+  Activity,
+  Shield,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -79,44 +82,33 @@ const MOCK = {
 
 type KPIStatus = "GREEN" | "AMBER" | "RED";
 
-type CardProps = {
-  children: React.ReactNode;
-  className?: string;
-};
+// ---------- 通用組件 ----------
 
-const Card = ({ children, className = "" }: CardProps) => (
-  <div className={`bg-[#141414] border border-white/10 rounded-3xl overflow-hidden shadow-2xl ${className}`}>
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl transition-all hover:border-[#D9E021]/30 ${className}`}>
     {children}
   </div>
 );
 
-type CardHeaderProps = {
-  title: string;
-  icon: LucideIcon;
-  color?: string;
-};
-
-const CardHeader = ({ title, icon: Icon, color = THEME.lemon }: CardHeaderProps) => (
+const CardHeader = ({ title, icon: Icon, color = THEME.lemon }: { title: string; icon: LucideIcon; color?: string }) => (
   <div className="flex items-center gap-3 p-6 border-b border-white/5">
     <Icon size={20} style={{ color }} />
     <h3 className="text-lg font-bold tracking-tight text-white">{title}</h3>
   </div>
 );
 
-// ---------- 主要分頁面板 ----------
+// ---------- 分頁面板 ----------
 
-// 1. 中二企劃核心模組
 const ChuniPanel = () => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card className="p-6 bg-gradient-to-br from-[#D9E021]/10 to-transparent border-[#D9E021]/30">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <MousePointer2 size={20} className="text-[#D9E021]" /> 指揮官指令 (Command)
+      <Card className="p-6 bg-gradient-to-br from-[#D9E021]/10 to-transparent">
+        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#D9E021]">
+          <MousePointer2 size={20} /> 指揮官指令 (Command)
         </h3>
         <p className="text-sm text-neutral-400 leading-relaxed">
           目前「羊群」對於設定驅動型內容反應極佳，但轉化為「新觀眾」的效率停滯。
-          <br />
-          <br />
+          <br /><br />
           <span className="text-[#D9E021] font-bold">● 即刻行動：</span>
           在直播畫面增加「今日領地規則」小浮窗，降低新教眾的認知難度。
         </p>
@@ -134,9 +126,11 @@ const ChuniPanel = () => (
                 <span className="text-[#D9E021] font-mono">{85 - i * 5}%</span>
               </div>
               <div className="h-1.5 w-full bg-white/5 rounded-full">
-                <div
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${85 - i * 5}%` }}
+                  transition={{ duration: 1, delay: 0.5 }}
                   className="h-full bg-[#D9E021] shadow-[0_0_10px_#D9E021] rounded-full"
-                  style={{ width: `${85 - i * 5}%` }}
                 />
               </div>
             </div>
@@ -176,7 +170,6 @@ const ChuniPanel = () => (
   </div>
 );
 
-// 2. 數據與流量分析模組
 const AnalysisPanel = () => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <Card className="lg:col-span-2 p-6">
@@ -190,7 +183,7 @@ const AnalysisPanel = () => (
             <ZAxis type="number" dataKey="z" range={[100, 1000]} />
             <Tooltip
               cursor={{ strokeDasharray: "3 3" }}
-              contentStyle={{ backgroundColor: "#141414", border: "1px solid #333" }}
+              contentStyle={{ backgroundColor: "#141414", border: "1px solid #333", borderRadius: "8px" }}
             />
             {MOCK.contentMatrix.map((entry, index) => (
               <Scatter key={index} name={entry.name} data={[entry]} fill={PIE_COLORS[index % PIE_COLORS.length]} />
@@ -213,7 +206,6 @@ const AnalysisPanel = () => (
             <Tooltip />
           </PieChart>
         </ResponsiveContainer>
-
         <div className="space-y-2 mt-4">
           {MOCK.traffic.map((item, i) => (
             <div key={i} className="flex justify-between text-xs">
@@ -229,21 +221,16 @@ const AnalysisPanel = () => (
   </div>
 );
 
-// 3. 領域展開計畫面板
 const PlanPanel = () => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
     {MOCK.phases.map((p, i) => (
-      <Card key={i} className={`p-6 ${i === 0 ? "border-[#D9E021]/40" : ""}`}>
-        <div className="text-[10px] font-black text-[#D9E021] uppercase tracking-widest mb-2">
-          Phase 0{i + 1}
-        </div>
+      <Card key={i} className={`p-6 ${i === 0 ? "border-[#D9E021]/40 shadow-[#D9E021]/5" : ""}`}>
+        <div className="text-[10px] font-black text-[#D9E021] uppercase tracking-widest mb-2">Phase 0{i + 1}</div>
         <h4 className="text-xl font-black text-white italic mb-4">{p.title}</h4>
-
         <div className="bg-white/5 rounded-xl p-4 mb-4">
           <p className="text-xs text-neutral-500 uppercase font-bold mb-1">主要目標</p>
           <p className="text-sm text-white">{p.goal}</p>
         </div>
-
         <ul className="space-y-3">
           {p.bullets.map((b, idx) => (
             <li key={idx} className="flex items-start gap-2 text-sm text-neutral-400">
@@ -257,6 +244,7 @@ const PlanPanel = () => (
 );
 
 // ---------- 主頁面組件 ----------
+
 export default function LemonyangWarRoom() {
   const [activeTab, setActiveTab] = useState<"chuni" | "analysis" | "plan">("chuni");
 
@@ -273,22 +261,30 @@ export default function LemonyangWarRoom() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 font-sans selection:bg-[#D9E021] selection:text-black">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 font-sans selection:bg-[#D9E021] selection:text-black relative overflow-hidden">
+      
+      {/* 華麗背景裝飾：氛圍光 */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#D9E021]/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto space-y-10 relative z-10">
+        
         {/* Header */}
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-white/10 pb-10">
-          <div className="space-y-4">
+          <motion.div 
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="space-y-4"
+          >
             <div className="flex items-center gap-3">
               <span className="bg-[#D9E021] text-black px-2 py-0.5 text-[10px] font-black rounded uppercase italic tracking-tighter">
                 Live Monitor
               </span>
               <h1 className="text-5xl font-black tracking-tighter italic text-white uppercase">
-                Lemon<span className="text-[#D9E021]">yang</span> Command
+                Lemon<span className="text-[#D9E021] drop-shadow-[0_0_10px_#D9E021]">yang</span> Command
               </h1>
             </div>
-
             <p className="text-neutral-500 max-w-xl text-sm font-medium leading-relaxed">{MOCK.channel.oneLiner}</p>
-
             <div className="flex gap-2">
               <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
                 <Crown size={12} className="text-[#D9E021]" /> {MOCK.channel.stage}
@@ -297,10 +293,10 @@ export default function LemonyangWarRoom() {
                 定位：{MOCK.channel.core}
               </span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Tabs */}
-          <nav className="flex p-1.5 bg-neutral-900 border border-white/5 rounded-2xl">
+          <nav className="flex p-1.5 bg-neutral-900/50 backdrop-blur-md border border-white/5 rounded-2xl">
             {tabs.map((tab) => {
               const TabIcon = tab.icon;
               return (
@@ -320,12 +316,17 @@ export default function LemonyangWarRoom() {
           </nav>
         </header>
 
-        {/* KPI */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI Cards */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        >
           {Object.entries(MOCK.kpis).map(([key, kpi]) => (
             <div
               key={key}
-              className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all"
+              className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all hover:translate-y-[-2px]"
             >
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">{kpi.label}</span>
@@ -337,9 +338,9 @@ export default function LemonyangWarRoom() {
               </div>
             </div>
           ))}
-        </div>
+        </motion.div>
 
-        {/* Content */}
+        {/* Main Content Area */}
         <main className="min-h-[500px]">
           <AnimatePresence mode="wait">
             <motion.div
@@ -347,7 +348,7 @@ export default function LemonyangWarRoom() {
               initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
-              transition={{ duration: 0.3, ease: "circOut" }}
+              transition={{ duration: 0.4, ease: "circOut" }}
             >
               {activeTab === "chuni" && <ChuniPanel />}
               {activeTab === "analysis" && <AnalysisPanel />}
@@ -360,13 +361,18 @@ export default function LemonyangWarRoom() {
         <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-600">
           <div className="flex items-center gap-6 text-[10px] font-black tracking-widest uppercase">
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D9E021] animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#D9E021] animate-pulse shadow-[0_0_8px_#D9E021]" />
               系統核心運作中
             </div>
             <div>VER: 2.5.0_LEMON_BURST</div>
           </div>
-          <div className="text-[10px] font-bold italic">© 2024 LEMON COMMAND CENTER // UNLEASH THE CHUNIBYO</div>
+          <div className="text-[10px] font-bold italic">© 2026 LEMON COMMAND CENTER // UNLEASH THE CHUNIBYO</div>
         </footer>
+      </div>
+
+      {/* 底部座標裝飾 */}
+      <div className="fixed bottom-4 left-4 text-[8px] text-neutral-800 font-mono pointer-events-none uppercase tracking-[0.3em]">
+        Area_ID: 70529 // LMN_WAV_LENGTH: 420.69Hz
       </div>
     </div>
   );
