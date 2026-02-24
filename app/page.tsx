@@ -10,12 +10,11 @@ import {
   ScrollText,
   Sword,
   Target,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ---------- 模擬數據集 (lemonyang 專屬) ----------
+// ---------- 模擬數據集 ----------
 const MOCK = {
   channel: {
     name: "lemonyang",
@@ -54,7 +53,7 @@ const MOCK = {
 
 type KPIStatus = "GREEN" | "AMBER" | "RED";
 
-// ✅ 只有切到 analysis 才載入 recharts
+// ✅ AnalysisPanel 動態載入（recharts 不進首屏）
 const AnalysisPanel = dynamic(() => import("./components/AnalysisPanel"), {
   ssr: false,
   loading: () => (
@@ -64,7 +63,7 @@ const AnalysisPanel = dynamic(() => import("./components/AnalysisPanel"), {
   ),
 });
 
-// ---------- Apple-like 組件 ----------
+// ---------- Apple 官方感：Design System ----------
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <section
     className={[
@@ -88,10 +87,10 @@ const CardHeader = ({
 }) => (
   <div className="flex items-center justify-between gap-4 px-8 py-6 border-b border-black/5">
     <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-2xl bg-black/5 flex items-center justify-center">
+      <div className="w-9 h-9 rounded-2xl bg-black/[0.05] ring-1 ring-black/5 flex items-center justify-center">
         <Icon size={18} className="text-ink" />
       </div>
-      <h3 className="text-base font-semibold text-ink tracking-tight">{title}</h3>
+      <h3 className="text-[15px] font-semibold text-ink tracking-tight">{title}</h3>
     </div>
     {right}
   </div>
@@ -106,7 +105,7 @@ const Segmented = ({
   onChange: (v: string) => void;
   items: Array<{ id: string; label: string; icon: LucideIcon }>;
 }) => (
-  <div className="inline-flex rounded-2xl bg-black/5 p-1 ring-1 ring-black/10">
+  <div className="inline-flex rounded-2xl bg-black/[0.05] p-1 ring-1 ring-border-soft shadow-inset">
     {items.map((it) => {
       const Icon = it.icon;
       const active = value === it.id;
@@ -117,7 +116,7 @@ const Segmented = ({
           className={[
             "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
             "transition duration-250 ease-apple",
-            active ? "bg-white text-ink shadow-soft ring-1 ring-black/10" : "text-muted hover:text-ink",
+            active ? "bg-white text-ink shadow-soft ring-1 ring-border-softer" : "text-muted hover:text-ink",
           ].join(" ")}
         >
           <Icon size={16} />
@@ -146,7 +145,7 @@ const MetricCard = ({
         <div className="space-y-1">
           <p className="text-xs font-medium text-muted">{label}</p>
           <div className="flex items-end gap-2">
-            <div className="text-3xl font-semibold text-ink tracking-tight">{value}</div>
+            <div className="text-3xl font-semibold text-ink tracking-tight tabular-nums">{value}</div>
             <div className="text-xs font-medium text-muted pb-1">{unit}</div>
           </div>
         </div>
@@ -156,7 +155,7 @@ const MetricCard = ({
   );
 };
 
-// ---------- Panels（不依賴 recharts 的留在 page 裡） ----------
+// ---------- Panels ----------
 const ChuniPanel = () => {
   const [open, setOpen] = useState(true);
 
@@ -256,15 +255,13 @@ const ChuniPanel = () => {
                 {MOCK.chuniKpis.map((kpi) => {
                   const ok = kpi.status !== "WARNING";
                   return (
-                    <tr key={kpi.id} className="hover:bg-black/[0.02] transition-colors">
+                    <tr key={kpi.id} className="hover:bg-black/[0.015] transition-colors">
                       <td className="px-8 py-5">
                         <span className="text-sm font-semibold text-ink">{kpi.category}</span>
                       </td>
                       <td className="px-8 py-5 text-sm text-muted">{kpi.metric}</td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`text-sm font-semibold tabular-nums ${ok ? "text-ink" : "text-red-600"}`}>
-                          {kpi.actual}
-                        </span>
+                      <td className="px-8 py-5 text-center tabular-nums">
+                        <span className={`text-sm font-semibold ${ok ? "text-ink" : "text-red-600"}`}>{kpi.actual}</span>
                         <span className="text-muted text-sm ml-2">/ {kpi.target}</span>
                       </td>
                       <td className="px-8 py-5 text-sm text-muted">{kpi.advice}</td>
@@ -311,7 +308,7 @@ const PlanPanel = () => (
   </div>
 );
 
-// ---------- 主頁面 ----------
+// ---------- Page ----------
 export default function Page() {
   const [activeTab, setActiveTab] = useState<"chuni" | "analysis" | "plan">("chuni");
 
@@ -332,9 +329,7 @@ export default function Page() {
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2">
-                <span className="rounded-full bg-black text-white px-3 py-1 text-xs font-medium">
-                  Live Monitor
-                </span>
+                <span className="rounded-full bg-black text-white px-3 py-1 text-xs font-medium">Live Monitor</span>
                 <span className="text-xs text-muted">Channel · {MOCK.channel.name}</span>
               </div>
 
@@ -342,7 +337,8 @@ export default function Page() {
                 LemonYang <span className="text-muted">Dashboard</span>
               </h1>
 
-              <p className="text-base text-muted max-w-2xl leading-relaxed">{MOCK.channel.oneLiner}</p>
+              <p className="text-base text-muted max-w-2xl leading-relaxed">用更少資訊，做更快決策。</p>
+              <p className="text-sm text-muted/80 max-w-2xl leading-relaxed">{MOCK.channel.oneLiner}</p>
 
               <div className="flex flex-wrap gap-2 pt-1">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium ring-1 ring-border-soft">
@@ -378,9 +374,7 @@ export default function Page() {
               transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
             >
               {activeTab === "chuni" && <ChuniPanel />}
-              {activeTab === "analysis" && (
-                <AnalysisPanel traffic={MOCK.traffic} contentMatrix={MOCK.contentMatrix} />
-              )}
+              {activeTab === "analysis" && <AnalysisPanel traffic={MOCK.traffic} contentMatrix={MOCK.contentMatrix} />}
               {activeTab === "plan" && <PlanPanel />}
             </motion.div>
           </AnimatePresence>
@@ -390,9 +384,7 @@ export default function Page() {
         <footer className="pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-muted">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-lemon" />
-            系統運作中
-            <span className="text-muted/70">·</span>
-            <span className="text-muted/70">v2.5.0</span>
+            系統運作中 <span className="text-muted/70">·</span> <span className="text-muted/70">v2.5.0</span>
           </div>
           <div className="text-muted/70">© 2026 Lemon Dashboard</div>
         </footer>
