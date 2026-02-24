@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   BarChart3,
   Crown,
@@ -13,22 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  PieChart,
-  Pie,
-  Cell,
-  ScatterChart,
-  Scatter,
-  ZAxis,
-} from "recharts";
-
-// ---------- Apple-like 色彩（僅留少量） ----------
-const PIE_COLORS = ["#D9E021", "#111827", "#6B7280", "#D1D5DB"];
 
 // ---------- 模擬數據集 (lemonyang 專屬) ----------
 const MOCK = {
@@ -69,7 +54,17 @@ const MOCK = {
 
 type KPIStatus = "GREEN" | "AMBER" | "RED";
 
-// ---------- Apple-like 通用組件 ----------
+// ✅ 只有切到 analysis 才載入 recharts
+const AnalysisPanel = dynamic(() => import("./components/AnalysisPanel"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-3xl bg-white shadow-card ring-1 ring-border-soft p-8 text-sm text-muted">
+      Loading charts…
+    </div>
+  ),
+});
+
+// ---------- Apple-like 組件 ----------
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <section
     className={[
@@ -161,32 +156,12 @@ const MetricCard = ({
   );
 };
 
-// ---------- Recharts：白底版 Tooltip ----------
-const WhiteTooltip = (props: any) => {
-  const { active, payload, label } = props;
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-2xl bg-white px-4 py-3 shadow-soft ring-1 ring-black/10">
-      {label ? <div className="text-xs font-medium text-muted mb-1">{label}</div> : null}
-      {payload.map((p: any, i: number) => (
-        <div key={i} className="text-sm text-ink">
-          <span className="font-medium">{p.name ?? p.dataKey}</span>
-          <span className="text-muted"> · </span>
-          <span className="font-semibold">{p.value}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ---------- 分頁面板：Apple-like 版本 ----------
-
+// ---------- Panels（不依賴 recharts 的留在 page 裡） ----------
 const ChuniPanel = () => {
   const [open, setOpen] = useState(true);
 
   return (
     <div className="space-y-6">
-      {/* 2-up summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-8">
           <div className="flex items-start justify-between gap-4">
@@ -207,9 +182,7 @@ const ChuniPanel = () => {
 
           <div className="mt-6 rounded-2xl bg-bg-soft p-4 ring-1 ring-border-soft">
             <div className="text-xs font-medium text-muted mb-2">即刻行動</div>
-            <div className="text-sm text-ink">
-              在直播畫面增加「今日領地規則」小浮窗，降低新教眾的認知難度。
-            </div>
+            <div className="text-sm text-ink">在直播畫面增加「今日領地規則」小浮窗，降低新教眾的認知難度。</div>
           </div>
         </Card>
 
@@ -255,7 +228,6 @@ const ChuniPanel = () => {
         </Card>
       </div>
 
-      {/* Table (collapsible) */}
       <Card>
         <CardHeader
           title="企劃 KPI 追蹤"
@@ -310,81 +282,6 @@ const ChuniPanel = () => {
   );
 };
 
-const AnalysisPanel = () => (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <Card className="lg:col-span-2">
-      <CardHeader title="內容貢獻矩陣" icon={BarChart3} right={<span className="text-xs text-muted">X: 擴散 · Y: 穩定</span>} />
-      <div className="px-6 md:px-8 py-6">
-        <div className="h-[360px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 16, right: 16, bottom: 16, left: 0 }}>
-              <CartesianGrid stroke="rgba(0,0,0,0.06)" strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                dataKey="x"
-                name="擴散性"
-                stroke="rgba(0,0,0,0.35)"
-                tick={{ fill: "rgba(0,0,0,0.45)", fontSize: 12 }}
-              />
-              <YAxis
-                type="number"
-                dataKey="y"
-                name="穩定度"
-                stroke="rgba(0,0,0,0.35)"
-                tick={{ fill: "rgba(0,0,0,0.45)", fontSize: 12 }}
-              />
-              <ZAxis type="number" dataKey="z" range={[90, 520]} />
-              <Tooltip content={<WhiteTooltip />} cursor={{ strokeDasharray: "3 3", stroke: "rgba(0,0,0,0.2)" }} />
-              {MOCK.contentMatrix.map((entry, index) => (
-                <Scatter
-                  key={index}
-                  name={entry.name}
-                  data={[entry]}
-                  fill={PIE_COLORS[index % PIE_COLORS.length]}
-                />
-              ))}
-            </ScatterChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="mt-4 text-xs text-muted">
-          建議：優先把「高擴散但低穩定」的內容，補上固定開場與規則提示，讓新觀眾更容易留下來。
-        </div>
-      </div>
-    </Card>
-
-    <Card>
-      <CardHeader title="流量來源" icon={Users} />
-      <div className="px-6 md:px-8 py-6">
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={MOCK.traffic} innerRadius={70} outerRadius={105} dataKey="value" paddingAngle={4}>
-                {MOCK.traffic.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i]} stroke="rgba(0,0,0,0.08)" />
-                ))}
-              </Pie>
-              <Tooltip content={<WhiteTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="mt-4 space-y-2">
-          {MOCK.traffic.map((item, i) => (
-            <div key={i} className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-muted">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
-                {item.name}
-              </div>
-              <div className="font-semibold tabular-nums text-ink">{item.value}%</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Card>
-  </div>
-);
-
 const PlanPanel = () => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     {MOCK.phases.map((p, i) => (
@@ -414,8 +311,8 @@ const PlanPanel = () => (
   </div>
 );
 
-// ---------- 主頁面組件 ----------
-export default function LemonyangWarRoom() {
+// ---------- 主頁面 ----------
+export default function Page() {
   const [activeTab, setActiveTab] = useState<"chuni" | "analysis" | "plan">("chuni");
 
   const tabs: Array<{ id: "chuni" | "analysis" | "plan"; label: string; icon: LucideIcon }> = useMemo(
@@ -430,7 +327,7 @@ export default function LemonyangWarRoom() {
   return (
     <div className="min-h-screen bg-bg-soft text-ink font-sans selection:bg-lemon selection:text-black">
       <div className="mx-auto max-w-content px-6 md:px-10 py-10 md:py-14 space-y-10">
-        {/* Header / Hero */}
+        {/* Hero */}
         <header className="space-y-6">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div className="space-y-3">
@@ -462,7 +359,7 @@ export default function LemonyangWarRoom() {
           </div>
         </header>
 
-        {/* KPI Row */}
+        {/* KPI */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard {...MOCK.kpis.faithWavelength} />
           <MetricCard {...MOCK.kpis.chatHeat} />
@@ -481,7 +378,9 @@ export default function LemonyangWarRoom() {
               transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
             >
               {activeTab === "chuni" && <ChuniPanel />}
-              {activeTab === "analysis" && <AnalysisPanel />}
+              {activeTab === "analysis" && (
+                <AnalysisPanel traffic={MOCK.traffic} contentMatrix={MOCK.contentMatrix} />
+              )}
               {activeTab === "plan" && <PlanPanel />}
             </motion.div>
           </AnimatePresence>
