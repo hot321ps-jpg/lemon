@@ -1,16 +1,15 @@
 // app/layout.tsx
 import "./globals.css";
 
+export const metadata = {
+  title: "Lemon Dashboard",
+  description: "Apple-like war room",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-Hant">
-      <body className="min-h-screen">
-        <div className="bg-flow" />
-        <div className="scanlines" />
-        <div className="noise" />
-
-        <main className="relative z-10">{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
