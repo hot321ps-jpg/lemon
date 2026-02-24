@@ -3,38 +3,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---- Apple-like base tokens ---- */
-:root{
-  --bg: #ffffff;
-  --bg-soft: #f5f5f7;
-  --text: #1d1d1f;
-  --muted: #6e6e73;
-  --border-soft: rgba(0,0,0,.08);
-}
-
-html, body { height: 100%; }
-
-body{
-  background: var(--bg-soft);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 讓數字更像 Apple（不會跳動抖動） */
-.tabular-nums { font-variant-numeric: tabular-nums; }
-
-/* ---- 可選：HUD 裝飾（如果你要蘋果簡約，建議直接刪掉這段） ---- */
+/* 你的 HUD 裝飾 (保留原本的) */
 .hud-scanlines{
   position:absolute; inset:0;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(0,0,0,.035),
-    rgba(0,0,0,.035) 1px,
+    rgba(255,255,255,.06),
+    rgba(255,255,255,.06) 1px,
     rgba(0,0,0,0) 3px,
     rgba(0,0,0,0) 7px
   );
-  opacity:.06;
+  opacity:.10;
   pointer-events:none;
   mix-blend-mode: overlay;
 }
@@ -42,17 +21,17 @@ body{
 .hud-noise{
   position:absolute; inset:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
-  opacity:.03;
+  opacity:.05;
   pointer-events:none;
 }
 
 .hud-grid{
   position:absolute; inset:0;
   background:
-    linear-gradient(to right, rgba(217,224,33,.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(217,224,33,.04) 1px, transparent 1px);
-  background-size: 72px 72px;
-  opacity:.08;
-  mask-image: radial-gradient(ellipse at 50% 30%, black 35%, transparent 70%);
+    linear-gradient(to right, rgba(217,224,33,.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217,224,33,.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  opacity:.14;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 70%);
   pointer-events:none;
 }
