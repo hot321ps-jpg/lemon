@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   BarChart3,
   Crown,
@@ -10,9 +10,6 @@ import {
   Sword,
   Target,
   Users,
-  Activity,
-  Shield,
-  Zap,
   type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,18 +27,8 @@ import {
   ZAxis,
 } from "recharts";
 
-// ---------- 檸檬羊核心視覺定義 ----------
-const THEME = {
-  lemon: "#D9E021",
-  bg: "#0A0A0A",
-  card: "#141414",
-  border: "rgba(217, 224, 33, 0.2)",
-  text: "#FFFFFF",
-  muted: "#A3A3A3",
-  danger: "#FF4D4D",
-};
-
-const PIE_COLORS = [THEME.lemon, "#BCC41E", "#9AA118", "#787D13"];
+// ---------- Apple-like 色彩（僅留少量） ----------
+const PIE_COLORS = ["#D9E021", "#111827", "#6B7280", "#D1D5DB"];
 
 // ---------- 模擬數據集 (lemonyang 專屬) ----------
 const MOCK = {
@@ -82,137 +69,314 @@ const MOCK = {
 
 type KPIStatus = "GREEN" | "AMBER" | "RED";
 
-// ---------- 通用組件 ----------
-
+// ---------- Apple-like 通用組件 ----------
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-[#141414]/80 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl transition-all hover:border-[#D9E021]/30 ${className}`}>
+  <section
+    className={[
+      "rounded-3xl bg-white shadow-card ring-1 ring-border-soft",
+      "transition-transform duration-250 ease-apple hover:-translate-y-[1px]",
+      className,
+    ].join(" ")}
+  >
     {children}
+  </section>
+);
+
+const CardHeader = ({
+  title,
+  icon: Icon,
+  right,
+}: {
+  title: string;
+  icon: LucideIcon;
+  right?: React.ReactNode;
+}) => (
+  <div className="flex items-center justify-between gap-4 px-8 py-6 border-b border-black/5">
+    <div className="flex items-center gap-3">
+      <div className="w-9 h-9 rounded-2xl bg-black/5 flex items-center justify-center">
+        <Icon size={18} className="text-ink" />
+      </div>
+      <h3 className="text-base font-semibold text-ink tracking-tight">{title}</h3>
+    </div>
+    {right}
   </div>
 );
 
-const CardHeader = ({ title, icon: Icon, color = THEME.lemon }: { title: string; icon: LucideIcon; color?: string }) => (
-  <div className="flex items-center gap-3 p-6 border-b border-white/5">
-    <Icon size={20} style={{ color }} />
-    <h3 className="text-lg font-bold tracking-tight text-white">{title}</h3>
+const Segmented = ({
+  value,
+  onChange,
+  items,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  items: Array<{ id: string; label: string; icon: LucideIcon }>;
+}) => (
+  <div className="inline-flex rounded-2xl bg-black/5 p-1 ring-1 ring-black/10">
+    {items.map((it) => {
+      const Icon = it.icon;
+      const active = value === it.id;
+      return (
+        <button
+          key={it.id}
+          onClick={() => onChange(it.id)}
+          className={[
+            "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
+            "transition duration-250 ease-apple",
+            active ? "bg-white text-ink shadow-soft ring-1 ring-black/10" : "text-muted hover:text-ink",
+          ].join(" ")}
+        >
+          <Icon size={16} />
+          {it.label}
+        </button>
+      );
+    })}
   </div>
 );
 
-// ---------- 分頁面板 ----------
-
-const ChuniPanel = () => (
-  <div className="space-y-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card className="p-6 bg-gradient-to-br from-[#D9E021]/10 to-transparent">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#D9E021]">
-          <MousePointer2 size={20} /> 指揮官指令 (Command)
-        </h3>
-        <p className="text-sm text-neutral-400 leading-relaxed">
-          目前「羊群」對於設定驅動型內容反應極佳，但轉化為「新觀眾」的效率停滯。
-          <br /><br />
-          <span className="text-[#D9E021] font-bold">● 即刻行動：</span>
-          在直播畫面增加「今日領地規則」小浮窗，降低新教眾的認知難度。
-        </p>
-      </Card>
-
-      <Card className="p-6">
-        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
-          <Target size={20} className="text-[#D9E021]" /> 術式穩定度 (Lore Sync)
-        </h3>
-        <div className="space-y-5">
-          {["吟唱完成度", "視覺特效同步", "觀眾口號配合"].map((item, i) => (
-            <div key={i}>
-              <div className="flex justify-between text-xs mb-2">
-                <span className="text-neutral-500 font-bold uppercase tracking-wider">{item}</span>
-                <span className="text-[#D9E021] font-mono">{85 - i * 5}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${85 - i * 5}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-full bg-[#D9E021] shadow-[0_0_10px_#D9E021] rounded-full"
-                />
-              </div>
-            </div>
-          ))}
+const MetricCard = ({
+  label,
+  value,
+  unit,
+  status,
+}: {
+  label: string;
+  value: number | string;
+  unit: string;
+  status: KPIStatus;
+}) => {
+  const dot = status === "GREEN" ? "bg-lemon" : status === "AMBER" ? "bg-amber-400" : "bg-red-400";
+  return (
+    <Card className="px-8 py-6">
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted">{label}</p>
+          <div className="flex items-end gap-2">
+            <div className="text-3xl font-semibold text-ink tracking-tight">{value}</div>
+            <div className="text-xs font-medium text-muted pb-1">{unit}</div>
+          </div>
         </div>
+        <span className={`w-2.5 h-2.5 rounded-full ${dot}`} />
+      </div>
+    </Card>
+  );
+};
+
+// ---------- Recharts：白底版 Tooltip ----------
+const WhiteTooltip = (props: any) => {
+  const { active, payload, label } = props;
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-2xl bg-white px-4 py-3 shadow-soft ring-1 ring-black/10">
+      {label ? <div className="text-xs font-medium text-muted mb-1">{label}</div> : null}
+      {payload.map((p: any, i: number) => (
+        <div key={i} className="text-sm text-ink">
+          <span className="font-medium">{p.name ?? p.dataKey}</span>
+          <span className="text-muted"> · </span>
+          <span className="font-semibold">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// ---------- 分頁面板：Apple-like 版本 ----------
+
+const ChuniPanel = () => {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div className="space-y-6">
+      {/* 2-up summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-lemon" />
+                <span className="text-xs font-medium text-muted">Command</span>
+              </div>
+              <h3 className="text-xl font-semibold text-ink tracking-tight">本週重點指令</h3>
+              <p className="text-sm text-muted leading-relaxed">
+                羊群對設定驅動型內容反應佳，但「新觀眾理解成本」偏高。把規則說清楚，就能把黏著轉化成擴散。
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-black/5 flex items-center justify-center shrink-0">
+              <MousePointer2 size={18} className="text-ink" />
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl bg-bg-soft p-4 ring-1 ring-border-soft">
+            <div className="text-xs font-medium text-muted mb-2">即刻行動</div>
+            <div className="text-sm text-ink">
+              在直播畫面增加「今日領地規則」小浮窗，降低新教眾的認知難度。
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-black/30" />
+                <span className="text-xs font-medium text-muted">Lore Sync</span>
+              </div>
+              <h3 className="text-xl font-semibold text-ink tracking-tight">術式穩定度</h3>
+              <p className="text-sm text-muted leading-relaxed">
+                儀式感要穩、但不要拖。把流程變短，觀眾更容易跟上、也更容易剪成短影音。
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-black/5 flex items-center justify-center shrink-0">
+              <Target size={18} className="text-ink" />
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {[
+              { name: "吟唱完成度", v: 85 },
+              { name: "視覺特效同步", v: 80 },
+              { name: "觀眾口號配合", v: 75 },
+            ].map((item) => (
+              <div key={item.name}>
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="text-muted font-medium">{item.name}</span>
+                  <span className="text-ink font-semibold tabular-nums">{item.v}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-black/5 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${item.v}%` }}
+                    transition={{ duration: 0.7, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="h-full bg-lemon rounded-full"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      {/* Table (collapsible) */}
+      <Card>
+        <CardHeader
+          title="企劃 KPI 追蹤"
+          icon={ScrollText}
+          right={
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="text-sm font-medium text-muted hover:text-ink transition duration-250 ease-apple"
+            >
+              {open ? "收合" : "展開"}
+            </button>
+          }
+        />
+        {open ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-black/[0.03] text-muted text-[11px] font-medium">
+                <tr>
+                  <th className="px-8 py-4 border-b border-black/5">類別</th>
+                  <th className="px-8 py-4 border-b border-black/5">關鍵指標</th>
+                  <th className="px-8 py-4 border-b border-black/5 text-center">實際 / 目標</th>
+                  <th className="px-8 py-4 border-b border-black/5">建議</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/5">
+                {MOCK.chuniKpis.map((kpi) => {
+                  const ok = kpi.status !== "WARNING";
+                  return (
+                    <tr key={kpi.id} className="hover:bg-black/[0.02] transition-colors">
+                      <td className="px-8 py-5">
+                        <span className="text-sm font-semibold text-ink">{kpi.category}</span>
+                      </td>
+                      <td className="px-8 py-5 text-sm text-muted">{kpi.metric}</td>
+                      <td className="px-8 py-5 text-center">
+                        <span className={`text-sm font-semibold tabular-nums ${ok ? "text-ink" : "text-red-600"}`}>
+                          {kpi.actual}
+                        </span>
+                        <span className="text-muted text-sm ml-2">/ {kpi.target}</span>
+                      </td>
+                      <td className="px-8 py-5 text-sm text-muted">{kpi.advice}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="px-8 py-6 text-sm text-muted">已收合。點右上角展開查看細節。</div>
+        )}
       </Card>
     </div>
-
-    <Card>
-      <CardHeader title="中二企劃 KPI 追蹤表" icon={ScrollText} />
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-white/5 text-neutral-500 font-bold uppercase text-[10px] tracking-widest">
-            <tr>
-              <th className="p-4 border-b border-white/5">類別</th>
-              <th className="p-4 border-b border-white/5">關鍵指標</th>
-              <th className="p-4 border-b border-white/5 text-center">實際 / 目標</th>
-              <th className="p-4 border-b border-white/5">作戰指令</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {MOCK.chuniKpis.map((kpi) => (
-              <tr key={kpi.id} className="hover:bg-white/[0.02] transition-colors">
-                <td className="p-4 font-black text-[#D9E021] italic">{kpi.category}</td>
-                <td className="p-4 text-neutral-300">{kpi.metric}</td>
-                <td className="p-4 text-center font-mono font-bold">
-                  <span className={kpi.status === "WARNING" ? "text-red-500" : "text-emerald-400"}>{kpi.actual}</span>
-                  <span className="text-neutral-600 ml-1">/ {kpi.target}</span>
-                </td>
-                <td className="p-4 text-xs text-neutral-500 italic">{kpi.advice}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Card>
-  </div>
-);
+  );
+};
 
 const AnalysisPanel = () => (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <Card className="lg:col-span-2 p-6">
-      <CardHeader title="內容貢獻矩陣 (X:擴散性, Y:穩定度)" icon={BarChart3} />
-      <div className="h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-            <XAxis type="number" dataKey="x" name="擴散性" stroke="#444" fontSize={12} />
-            <YAxis type="number" dataKey="y" name="穩定度" stroke="#444" fontSize={12} />
-            <ZAxis type="number" dataKey="z" range={[100, 1000]} />
-            <Tooltip
-              cursor={{ strokeDasharray: "3 3" }}
-              contentStyle={{ backgroundColor: "#141414", border: "1px solid #333", borderRadius: "8px" }}
-            />
-            {MOCK.contentMatrix.map((entry, index) => (
-              <Scatter key={index} name={entry.name} data={[entry]} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-            ))}
-          </ScatterChart>
-        </ResponsiveContainer>
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <Card className="lg:col-span-2">
+      <CardHeader title="內容貢獻矩陣" icon={BarChart3} right={<span className="text-xs text-muted">X: 擴散 · Y: 穩定</span>} />
+      <div className="px-6 md:px-8 py-6">
+        <div className="h-[360px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <ScatterChart margin={{ top: 16, right: 16, bottom: 16, left: 0 }}>
+              <CartesianGrid stroke="rgba(0,0,0,0.06)" strokeDasharray="3 3" />
+              <XAxis
+                type="number"
+                dataKey="x"
+                name="擴散性"
+                stroke="rgba(0,0,0,0.35)"
+                tick={{ fill: "rgba(0,0,0,0.45)", fontSize: 12 }}
+              />
+              <YAxis
+                type="number"
+                dataKey="y"
+                name="穩定度"
+                stroke="rgba(0,0,0,0.35)"
+                tick={{ fill: "rgba(0,0,0,0.45)", fontSize: 12 }}
+              />
+              <ZAxis type="number" dataKey="z" range={[90, 520]} />
+              <Tooltip content={<WhiteTooltip />} cursor={{ strokeDasharray: "3 3", stroke: "rgba(0,0,0,0.2)" }} />
+              {MOCK.contentMatrix.map((entry, index) => (
+                <Scatter
+                  key={index}
+                  name={entry.name}
+                  data={[entry]}
+                  fill={PIE_COLORS[index % PIE_COLORS.length]}
+                />
+              ))}
+            </ScatterChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="mt-4 text-xs text-muted">
+          建議：優先把「高擴散但低穩定」的內容，補上固定開場與規則提示，讓新觀眾更容易留下來。
+        </div>
       </div>
     </Card>
 
-    <Card className="p-6">
-      <CardHeader title="流量信仰來源" icon={Users} />
-      <div className="h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={MOCK.traffic} innerRadius={70} outerRadius={100} dataKey="value" paddingAngle={5}>
-              {MOCK.traffic.map((_, i) => (
-                <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="space-y-2 mt-4">
+    <Card>
+      <CardHeader title="流量來源" icon={Users} />
+      <div className="px-6 md:px-8 py-6">
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie data={MOCK.traffic} innerRadius={70} outerRadius={105} dataKey="value" paddingAngle={4}>
+                {MOCK.traffic.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i]} stroke="rgba(0,0,0,0.08)" />
+                ))}
+              </Pie>
+              <Tooltip content={<WhiteTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="mt-4 space-y-2">
           {MOCK.traffic.map((item, i) => (
-            <div key={i} className="flex justify-between text-xs">
-              <span className="text-neutral-500 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} /> {item.name}
-              </span>
-              <span className="text-white font-mono">{item.value}%</span>
+            <div key={i} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-muted">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i] }} />
+                {item.name}
+              </div>
+              <div className="font-semibold tabular-nums text-ink">{item.value}%</div>
             </div>
           ))}
         </div>
@@ -222,19 +386,26 @@ const AnalysisPanel = () => (
 );
 
 const PlanPanel = () => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
     {MOCK.phases.map((p, i) => (
-      <Card key={i} className={`p-6 ${i === 0 ? "border-[#D9E021]/40 shadow-[#D9E021]/5" : ""}`}>
-        <div className="text-[10px] font-black text-[#D9E021] uppercase tracking-widest mb-2">Phase 0{i + 1}</div>
-        <h4 className="text-xl font-black text-white italic mb-4">{p.title}</h4>
-        <div className="bg-white/5 rounded-xl p-4 mb-4">
-          <p className="text-xs text-neutral-500 uppercase font-bold mb-1">主要目標</p>
-          <p className="text-sm text-white">{p.goal}</p>
+      <Card key={i} className="p-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-xs font-medium text-muted">Phase {i + 1}</div>
+          <span className={`w-2.5 h-2.5 rounded-full ${i === 0 ? "bg-lemon" : "bg-black/20"}`} />
         </div>
-        <ul className="space-y-3">
+
+        <h4 className="text-lg font-semibold text-ink tracking-tight">{p.title}</h4>
+
+        <div className="mt-4 rounded-2xl bg-bg-soft p-4 ring-1 ring-border-soft">
+          <p className="text-xs font-medium text-muted mb-1">主要目標</p>
+          <p className="text-sm text-ink">{p.goal}</p>
+        </div>
+
+        <ul className="mt-5 space-y-3">
           {p.bullets.map((b, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm text-neutral-400">
-              <span className="mt-1.5 w-1 h-1 rounded-full bg-[#D9E021] shrink-0" /> {b}
+            <li key={idx} className="flex items-start gap-3 text-sm text-muted">
+              <span className="mt-2 w-1.5 h-1.5 rounded-full bg-lemon shrink-0" />
+              <span>{b}</span>
             </li>
           ))}
         </ul>
@@ -244,111 +415,70 @@ const PlanPanel = () => (
 );
 
 // ---------- 主頁面組件 ----------
-
 export default function LemonyangWarRoom() {
   const [activeTab, setActiveTab] = useState<"chuni" | "analysis" | "plan">("chuni");
 
-  const tabs: Array<{ id: "chuni" | "analysis" | "plan"; label: string; icon: LucideIcon }> = [
-    { id: "chuni", label: "中二企劃", icon: Sword },
-    { id: "analysis", label: "矩陣分析", icon: BarChart3 },
-    { id: "plan", label: "作戰計畫", icon: Rocket },
-  ];
-
-  const statusDotClass = (status: KPIStatus) => {
-    if (status === "GREEN") return "bg-[#D9E021]";
-    if (status === "AMBER") return "bg-amber-500";
-    return "bg-red-500";
-  };
+  const tabs: Array<{ id: "chuni" | "analysis" | "plan"; label: string; icon: LucideIcon }> = useMemo(
+    () => [
+      { id: "chuni", label: "企劃", icon: Sword },
+      { id: "analysis", label: "分析", icon: BarChart3 },
+      { id: "plan", label: "計畫", icon: Rocket },
+    ],
+    []
+  );
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-12 font-sans selection:bg-[#D9E021] selection:text-black relative overflow-hidden">
-      
-      {/* 華麗背景裝飾：氛圍光 */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#D9E021]/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[100px] rounded-full pointer-events-none" />
+    <div className="min-h-screen bg-bg-soft text-ink font-sans selection:bg-lemon selection:text-black">
+      <div className="mx-auto max-w-content px-6 md:px-10 py-10 md:py-14 space-y-10">
+        {/* Header / Hero */}
+        <header className="space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2">
+                <span className="rounded-full bg-black text-white px-3 py-1 text-xs font-medium">
+                  Live Monitor
+                </span>
+                <span className="text-xs text-muted">Channel · {MOCK.channel.name}</span>
+              </div>
 
-      <div className="max-w-7xl mx-auto space-y-10 relative z-10">
-        
-        {/* Header */}
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-white/10 pb-10">
-          <motion.div 
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="space-y-4"
-          >
-            <div className="flex items-center gap-3">
-              <span className="bg-[#D9E021] text-black px-2 py-0.5 text-[10px] font-black rounded uppercase italic tracking-tighter">
-                Live Monitor
-              </span>
-              <h1 className="text-5xl font-black tracking-tighter italic text-white uppercase">
-                Lemon<span className="text-[#D9E021] drop-shadow-[0_0_10px_#D9E021]">yang</span> Command
+              <h1 className="text-hero font-semibold tracking-tight">
+                LemonYang <span className="text-muted">Dashboard</span>
               </h1>
-            </div>
-            <p className="text-neutral-500 max-w-xl text-sm font-medium leading-relaxed">{MOCK.channel.oneLiner}</p>
-            <div className="flex gap-2">
-              <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-                <Crown size={12} className="text-[#D9E021]" /> {MOCK.channel.stage}
-              </span>
-              <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                定位：{MOCK.channel.core}
-              </span>
-            </div>
-          </motion.div>
 
-          {/* Tabs */}
-          <nav className="flex p-1.5 bg-neutral-900/50 backdrop-blur-md border border-white/5 rounded-2xl">
-            {tabs.map((tab) => {
-              const TabIcon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all uppercase tracking-tighter ${
-                    activeTab === tab.id
-                      ? "bg-[#D9E021] text-black shadow-[0_0_25px_rgba(217,224,33,0.4)]"
-                      : "text-neutral-500 hover:text-white"
-                  }`}
-                >
-                  <TabIcon size={14} /> {tab.label}
-                </button>
-              );
-            })}
-          </nav>
+              <p className="text-base text-muted max-w-2xl leading-relaxed">{MOCK.channel.oneLiner}</p>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium ring-1 ring-border-soft">
+                  <Crown size={14} className="text-ink" />
+                  {MOCK.channel.stage}
+                </span>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-muted ring-1 ring-border-soft">
+                  {MOCK.channel.core}
+                </span>
+              </div>
+            </div>
+
+            <Segmented value={activeTab} onChange={(v) => setActiveTab(v as any)} items={tabs} />
+          </div>
         </header>
 
-        {/* KPI Cards */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
-          {Object.entries(MOCK.kpis).map(([key, kpi]) => (
-            <div
-              key={key}
-              className="bg-[#141414] border border-white/5 p-5 rounded-2xl group hover:border-[#D9E021]/30 transition-all hover:translate-y-[-2px]"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">{kpi.label}</span>
-                <div className={`w-1.5 h-1.5 rounded-full ${statusDotClass(kpi.status)} shadow-[0_0_8px_currentColor]`} />
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-white italic tracking-tighter">{kpi.value}</span>
-                <span className="text-[10px] text-neutral-600 font-bold uppercase">{kpi.unit}</span>
-              </div>
-            </div>
-          ))}
-        </motion.div>
+        {/* KPI Row */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard {...MOCK.kpis.faithWavelength} />
+          <MetricCard {...MOCK.kpis.chatHeat} />
+          <MetricCard {...MOCK.kpis.retention} />
+          <MetricCard {...MOCK.kpis.viral} />
+        </section>
 
-        {/* Main Content Area */}
-        <main className="min-h-[500px]">
+        {/* Main */}
+        <main className="min-h-[520px]">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
-              transition={{ duration: 0.4, ease: "circOut" }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: [0.2, 0.8, 0.2, 1] }}
             >
               {activeTab === "chuni" && <ChuniPanel />}
               {activeTab === "analysis" && <AnalysisPanel />}
@@ -358,21 +488,15 @@ export default function LemonyangWarRoom() {
         </main>
 
         {/* Footer */}
-        <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-neutral-600">
-          <div className="flex items-center gap-6 text-[10px] font-black tracking-widest uppercase">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D9E021] animate-pulse shadow-[0_0_8px_#D9E021]" />
-              系統核心運作中
-            </div>
-            <div>VER: 2.5.0_LEMON_BURST</div>
+        <footer className="pt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs text-muted">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-lemon" />
+            系統運作中
+            <span className="text-muted/70">·</span>
+            <span className="text-muted/70">v2.5.0</span>
           </div>
-          <div className="text-[10px] font-bold italic">© 2026 LEMON COMMAND CENTER // UNLEASH THE CHUNIBYO</div>
+          <div className="text-muted/70">© 2026 Lemon Dashboard</div>
         </footer>
-      </div>
-
-      {/* 底部座標裝飾 */}
-      <div className="fixed bottom-4 left-4 text-[8px] text-neutral-800 font-mono pointer-events-none uppercase tracking-[0.3em]">
-        Area_ID: 70529 // LMN_WAV_LENGTH: 420.69Hz
       </div>
     </div>
   );
